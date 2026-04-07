@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>楽ちゃんのアプリ</title>
+<style>
+  body {
+    font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+    background: linear-gradient(135deg, #ffe5ec 0%, #fff5e1 100%);
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  h1 {
+    color: #5a3e2b;
+    text-shadow: 2px 2px 0 #fff;
+    margin-bottom: 8px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+  }
+  .dog { width: 260px; height: 260px; cursor: pointer; transition: transform 0.2s; }
+  .dog:hover { transform: scale(1.05) rotate(-2deg); }
+  .message {
+    font-size: 1.2em;
+    color: #6b4423;
+    margin: 16px 0;
+    min-height: 1.5em;
+  }
+  button {
+    background: #ff8fa3;
+    color: white;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 24px;
+    font-size: 1em;
+    margin: 6px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #d96a82;
+    font-family: inherit;
+    transition: transform 0.1s;
+  }
+  button:active { transform: translateY(2px); box-shadow: 0 2px 0 #d96a82; }
+  .stats { display: flex; justify-content: space-around; margin-top: 16px; font-size: 0.9em; color: #6b4423; }
+  .stat b { display: block; font-size: 1.4em; color: #ff6b88; }
+</style>
+</head>
+<body>
+  <h1>🐾 楽ちゃん 🐾</h1>
+  <div class="card">
+    <svg class="dog" viewBox="0 0 200 200" id="dog">
+      <!-- Ears -->
+      <ellipse cx="55" cy="70" rx="18" ry="28" fill="#2b2b2b" transform="rotate(-20 55 70)"/>
+      <ellipse cx="145" cy="70" rx="18" ry="28" fill="#2b2b2b" transform="rotate(20 145 70)"/>
+      <!-- Head -->
+      <ellipse cx="100" cy="105" rx="62" ry="58" fill="#2b2b2b"/>
+      <!-- White face mask -->
+      <path d="M100 70 Q70 90 70 130 Q70 160 100 160 Q130 160 130 130 Q130 90 100 70 Z" fill="#fff"/>
+      <!-- White stripe forehead -->
+      <path d="M95 60 Q90 90 95 120 L105 120 Q110 90 105 60 Z" fill="#fff"/>
+      <!-- Eyes -->
+      <ellipse cx="78" cy="100" rx="11" ry="13" fill="#fff"/>
+      <ellipse cx="122" cy="100" rx="11" ry="13" fill="#fff"/>
+      <circle cx="79" cy="103" r="7" fill="#1a1a1a"/>
+      <circle cx="121" cy="103" r="7" fill="#1a1a1a"/>
+      <circle cx="81" cy="101" r="2.5" fill="#fff"/>
+      <circle cx="123" cy="101" r="2.5" fill="#fff"/>
+      <!-- Cheeks -->
+      <circle cx="68" cy="125" r="6" fill="#ffb6c1" opacity="0.6"/>
+      <circle cx="132" cy="125" r="6" fill="#ffb6c1" opacity="0.6"/>
+      <!-- Nose -->
+      <ellipse cx="100" cy="125" rx="9" ry="7" fill="#1a1a1a"/>
+      <ellipse cx="97" cy="123" rx="2" ry="1.5" fill="#fff" opacity="0.6"/>
+      <!-- Mouth -->
+      <path d="M100 132 Q100 142 92 144" stroke="#1a1a1a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M100 132 Q100 142 108 144" stroke="#1a1a1a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- Tongue -->
+      <ellipse cx="100" cy="146" rx="5" ry="4" fill="#ff6b88"/>
+      <!-- Bow tie -->
+      <polygon points="80,170 100,160 100,180" fill="#ff6b88"/>
+      <polygon points="120,170 100,160 100,180" fill="#ff6b88"/>
+      <circle cx="100" cy="170" r="4" fill="#d94668"/>
+    </svg>
+    <div class="message" id="msg">楽ちゃんをなでてあげてね♪</div>
+    <button onclick="pet()">なでなで</button>
+    <button onclick="feed()">おやつ</button>
+    <button onclick="walk()">おさんぽ</button>
+    <div class="stats">
+      <div class="stat">しあわせ<b id="happy">50</b></div>
+      <div class="stat">おなか<b id="full">50</b></div>
+      <div class="stat">げんき<b id="energy">50</b></div>
+    </div>
+  </div>
+
+<script>
+  const state = { happy: 50, full: 50, energy: 50 };
+  const msg = document.getElementById('msg');
+  const dog = document.getElementById('dog');
+  function update() {
+    happy.textContent = state.happy;
+    full.textContent = state.full;
+    energy.textContent = state.energy;
+  }
+  function say(t) {
+    msg.textContent = t;
+    dog.style.transform = 'scale(1.1)';
+    setTimeout(() => dog.style.transform = '', 200);
+  }
+  function clamp(v){return Math.max(0,Math.min(100,v));}
+  function pet() {
+    state.happy = clamp(state.happy + 10);
+    say('くぅ〜ん♡ うれしいワン!');
+    update();
+  }
+  function feed() {
+    state.full = clamp(state.full + 15);
+    state.happy = clamp(state.happy + 5);
+    say('もぐもぐ…おいしいワン!');
+    update();
+  }
+  function walk() {
+    state.energy = clamp(state.energy - 10);
+    state.happy = clamp(state.happy + 15);
+    state.full = clamp(state.full - 5);
+    say('わんわん!おさんぽたのしいワン!');
+    update();
+  }
+  dog.addEventListener('click', pet);
+  update();
+</script>
+</body>
+</html>

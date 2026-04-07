@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>楽ちゃん＆鈴ちゃんの毎日ノート 🐾🐩</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;font-family:'Noto Sans JP',sans-serif;font-size:16px;background:#FAF6F4;color:#3C2E2A}
+  body{max-width:430px;margin:0 auto;min-height:100vh;padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+  body.theme-raku{background:#FBF4F4}
+  body.theme-suzu{background:#F6F4FB}
+  header{position:sticky;top:0;z-index:50;padding:14px 16px 10px;background:inherit;border-bottom:1px solid rgba(0,0,0,.06)}
+  .switch{display:flex;gap:8px;background:rgba(255,255,255,.7);padding:5px;border-radius:14px}
+  .switch button{flex:1;border:0;padding:11px 8px;border-radius:10px;background:transparent;font-weight:700;font-size:15px;color:#7a6663}
+  body.theme-raku .switch .raku{background:#C9848A;color:#fff;box-shadow:0 2px 6px rgba(201,132,138,.4)}
+  body.theme-suzu .switch .suzu{background:#9E8FC4;color:#fff;box-shadow:0 2px 6px rgba(158,143,196,.4)}
+  .profile{margin-top:10px;display:flex;align-items:center;gap:10px}
+  .profile .avatar{width:44px;height:44px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 2px 4px rgba(0,0,0,.06)}
+  .profile .info{line-height:1.3}
+  .profile .name{font-weight:700;font-size:16px}
+  .profile .sub{font-size:12px;color:#8a7570}
+  main{padding:14px 16px 20px}
+  .card{background:#fff;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  .card h2{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:6px}
+  label{display:block;font-size:13px;color:#6b5853;margin-bottom:6px;font-weight:500}
+  input[type=text],input[type=number],input[type=date],input[type=time],textarea,select{
+    width:100%;padding:11px 12px;border:1px solid #E5DDDA;border-radius:10px;font-size:16px;font-family:inherit;background:#fff;color:#3C2E2A
+  }
+  textarea{resize:vertical;min-height:70px}
+  .row{display:flex;gap:10px}
+  .row>*{flex:1}
+  .btn{display:inline-block;width:100%;padding:13px;border:0;border-radius:12px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:6px}
+  body.theme-raku .btn-primary{background:#C9848A;color:#fff}
+  body.theme-suzu .btn-primary{background:#9E8FC4;color:#fff}
+  .btn-sub{background:#F2EAE8;color:#6b5853}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{padding:9px 12px;border:1px solid #E5DDDA;border-radius:20px;background:#fff;font-size:13px;cursor:pointer;min-height:38px}
+  .chip.on{background:#C9848A;color:#fff;border-color:#C9848A}
+  body.theme-suzu .chip.on{background:#9E8FC4;border-color:#9E8FC4}
+  .checks label{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px dashed #F0E6E2;font-size:14px;color:#3C2E2A;margin:0}
+  .checks input{width:20px;height:20px;margin:0}
+  .checks label:last-child{border:0}
+  .alert{padding:10px 12px;border-radius:10px;font-size:13px;margin-top:8px}
+  .alert.warn{background:#FFF3E0;color:#A8590E}
+  .alert.danger{background:#FCE4E4;color:#B33A3A}
+  .alert.ok{background:#E8F5E9;color:#2E7D5C}
+  nav.tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;display:flex;border-top:1px solid #EDE3E0;padding-bottom:env(safe-area-inset-bottom);z-index:60}
+  nav.tabs button{flex:1;border:0;background:transparent;padding:9px 2px;font-size:10px;color:#9b8580;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:56px}
+  nav.tabs button .ic{font-size:20px}
+  body.theme-raku nav.tabs button.active{color:#C9848A}
+  body.theme-suzu nav.tabs button.active{color:#9E8FC4}
+  .tab-page{display:none}
+  .tab-page.active{display:block}
+  .list-item{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.04);font-size:13px}
+  .list-item .date{font-weight:700;color:#C9848A;margin-bottom:4px}
+  body.theme-suzu .list-item .date{color:#9E8FC4}
+  .list-item .meta{color:#7a6663;font-size:12px}
+  .del{float:right;color:#B33A3A;font-size:12px;background:transparent;border:0;cursor:pointer}
+  .empty{text-align:center;color:#9b8580;font-size:13px;padding:24px 10px}
+  .timeline{display:flex;gap:8px;margin-top:8px}
+  .timeline div{flex:1;background:#F8F1EF;border-radius:10px;padding:10px;text-align:center;font-size:12px}
+  .timeline div.done{background:#E8F5E9;color:#2E7D5C}
+  canvas{max-width:100%}
+  .mini{font-size:11px;color:#9b8580;margin-top:4px}
+</style>
+</head>
+<body class="theme-raku">
+
+<header>
+  <div class="switch">
+    <button class="raku" onclick="switchDog('raku')">楽ちゃん 🐾</button>
+    <button class="suzu" onclick="switchDog('suzu')">鈴ちゃん 🐩</button>
+  </div>
+  <div class="profile">
+    <div class="avatar" id="avatar">🐾</div>
+    <div class="info">
+      <div class="name" id="dogName">楽ちゃん</div>
+      <div class="sub" id="dogSub"></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- TAB 1: 今日の体調 -->
+  <section class="tab-page active" id="tab-daily">
+    <div class="card">
+      <h2>📋 今日の体調</h2>
+      <label>記録日</label>
+      <input type="date" id="d-date">
+    </div>
+
+    <!-- 楽ちゃん 詳細 -->
+    <div id="raku-detail">
+      <div class="card">
+        <h2>💨 呼吸数（安静時）</h2>
+        <div class="chips" id="d-resp"></div>
+        <div id="d-resp-alert"></div>
+        <div class="mini">目安：15〜30回/分</div>
+      </div>
+
+      <div class="card">
+        <h2>⚖ 体重</h2>
+        <div class="row">
+          <div><input type="number" step="0.1" id="d-weight" placeholder="kg"></div>
+          <div style="flex:1.2"><div class="mini" id="d-weight-diff">前回比：—</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🌡 気圧</h2>
+        <div class="row">
+          <input type="number" step="0.1" id="d-press" placeholder="hPa">
+          <button class="btn btn-sub" style="margin:0" onclick="getPressure()">📍取得</button>
+        </div>
+        <div class="mini" id="d-press-info">前日比：—</div>
+      </div>
+
+      <div class="card">
+        <h2>🩺 症状チェック</h2>
+        <div class="checks" id="d-symptoms"></div>
+      </div>
+
+      <div class="card">
+        <h2>⚡ 発作記録</h2>
+        <label><input type="checkbox" id="d-seiz"> 発作があった</label>
+        <div id="d-seiz-detail" style="display:none;margin-top:10px">
+          <label>時刻</label><input type="time" id="d-seiz-time">
+          <label style="margin-top:8px">持続時間（秒）</label><input type="number" id="d-seiz-dur">
+          <label style="margin-top:8px">様子・メモ</label><textarea id="d-seiz-note"></textarea>
+          <div id="d-seiz-alert"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 鈴ちゃん シンプル -->
+    <div id="suzu-simple" style="display:none">
+      <div class="card">
+        <h2>⚖ 体重</h2>
+        <input type="number" step="0.1" id="s-weight" placeholder="kg">
+        <div class="mini" id="s-weight-diff">前回比：—</div>
+      </div>
+      <div class="card">
+        <h2>🐩 様子・症状</h2>
+        <textarea id="s-cond" placeholder="今日は元気いっぱい！散歩もたくさん歩いた"></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>💊 今日のお薬</h2>
+      <div id="d-meds-today" class="checks"></div>
+    </div>
+
+    <div class="card">
+      <h2>📝 メモ</h2>
+      <textarea id="d-memo" placeholder="自由メモ"></textarea>
+      <button class="btn btn-primary" onclick="saveDaily()">この日の記録を保存</button>
+    </div>
+  </section>
+
+  <!-- TAB 2: 受診記録 -->
+  <section class="tab-page" id="tab-visit">
+    <div class="card">
+      <h2>🏥 受診記録を追加</h2>
+      <label>受診日</label><input type="date" id="v-date">
+      <label style="margin-top:10px">病院名</label><input type="text" id="v-hosp">
+      <label style="margin-top:10px">担当医</label><input type="text" id="v-doc">
+      <label style="margin-top:10px">受診理由</label><input type="text" id="v-reason">
+      <label style="margin-top:10px">検査内容</label><textarea id="v-test"></textarea>
+      <label style="margin-top:10px">検査結果・所見</label><textarea id="v-result"></textarea>
+      <label style="margin-top:10px">処方薬</label><textarea id="v-rx" placeholder="例: ピモベンダン 1.25mg 朝夕"></textarea>
+      <label style="margin-top:10px">次回受診予定</label><input type="date" id="v-next">
+      <label style="margin-top:10px">メモ</label><textarea id="v-memo"></textarea>
+      <button class="btn btn-primary" onclick="saveVisit()">受診記録を保存</button>
+    </div>
+    <h2 style="font-size:14px;margin:18px 4px 8px">これまでの受診</h2>
+    <div id="visit-list"></div>
+  </section>
+
+  <!-- TAB 3: 服薬 -->
+  <section class="tab-page" id="tab-med">
+    <div class="card">
+      <h2>💊 服薬を登録</h2>
+      <label>薬名</label><input type="text" id="m-name">
+      <label style="margin-top:10px">用量</label><input type="text" id="m-dose" placeholder="例: 1.25mg / 1錠">
+      <label style="margin-top:10px">タイミング</label>
+      <div class="chips" id="m-timing">
+        <div class="chip" data-t="朝">朝</div>
+        <div class="chip" data-t="昼">昼</div>
+        <div class="chip" data-t="夜">夜</div>
+        <div class="chip" data-t="就寝前">就寝前</div>
+      </div>
+      <label style="margin-top:10px">開始日</label><input type="date" id="m-start">
+      <label style="margin-top:10px">処方元</label><input type="text" id="m-from">
+      <button class="btn btn-primary" onclick="saveMed()">薬を追加</button>
+    </div>
+    <h2 style="font-size:14px;margin:18px 4px 8px">現在の服薬リスト</h2>
+    <div id="med-list"></div>
+  </section>
+
+  <!-- TAB 4: ワクチン -->
+  <section class="tab-page" id="tab-vac">
+    <div class="card">
+      <h2>🔔 ワクチン・健診を登録</h2>
+      <label>名称</label><input type="text" id="vc-name" placeholder="混合ワクチン / 狂犬病 / 健康診断">
+      <label style="margin-top:10px">接種日（実施日）</label><input type="date" id="vc-date">
+      <label style="margin-top:10px">次回予定</label><input type="date" id="vc-next">
+      <label style="margin-top:10px">病院</label><input type="text" id="vc-hosp">
+      <label style="margin-top:10px">メモ</label><textarea id="vc-memo"></textarea>
+      <button class="btn btn-primary" onclick="saveVac()">登録する</button>
+    </div>
+    <h2 style="font-size:14px;margin:18px 4px 8px">スケジュール</h2>
+    <div id="vac-list"></div>
+
+    <div class="card" style="margin-top:18px">
+      <h2>🪱 予防薬を記録（ノミダニ・フィラリア）</h2>
+      <label>種類</label>
+      <select id="pv-type">
+        <option value="ノミダニ">ノミダニ（毎月）</option>
+        <option value="フィラリア">フィラリア</option>
+        <option value="その他">その他</option>
+      </select>
+      <label style="margin-top:10px">薬名</label><input type="text" id="pv-name" placeholder="例: ネクスガード / モキシデック">
+      <label style="margin-top:10px">投与日</label><input type="date" id="pv-date">
+      <label style="margin-top:10px">次回予定（空欄ならノミダニは自動で40日後）</label><input type="date" id="pv-next">
+      <label style="margin-top:10px">メモ</label><textarea id="pv-memo"></textarea>
+      <button class="btn btn-primary" onclick="savePv()">予防薬を記録</button>
+    </div>
+    <h2 style="font-size:14px;margin:18px 4px 8px">予防薬の履歴・次回予定</h2>
+    <div id="pv-list"></div>
+  </section>
+
+  <!-- TAB 5: 一覧 -->
+  <section class="tab-page" id="tab-log">
+    <div class="card">
+      <h2>📊 体重の推移</h2>
+      <canvas id="chart-weight" height="180"></canvas>
+    </div>
+    <div class="card" id="card-resp" style="display:none">
+      <h2>💨 呼吸数の推移（楽ちゃん）</h2>
+      <canvas id="chart-resp" height="180"></canvas>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="btn btn-sub" style="margin:0" onclick="exportCSV()">📤 CSV出力</button>
+    </div>
+    <h2 style="font-size:14px;margin:18px 4px 8px">日々の記録</h2>
+    <div id="log-list"></div>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button data-tab="daily" class="active" onclick="showTab('daily')"><span class="ic">📋</span>体調</button>
+  <button data-tab="visit" onclick="showTab('visit')"><span class="ic">🏥</span>受診</button>
+  <button data-tab="med" onclick="showTab('med')"><span class="ic">💊</span>服薬</button>
+  <button data-tab="vac" onclick="showTab('vac')"><span class="ic">🔔</span>ワクチン</button>
+  <button data-tab="log" onclick="showTab('log')"><span class="ic">📊</span>記録</button>
+</nav>
+
+<script>
+const dogs = {
+  raku:{name:"楽",kana:"らく",emoji:"🐾",breed:"ボストンテリア",birthday:"2016-08-08",conditions:["僧帽弁閉鎖不全症","てんかん"],mode:"detailed"},
+  suzu:{name:"鈴",kana:"すず",emoji:"🐩",breed:"ブラックプードル",birthday:"2018-06-23",conditions:[],mode:"simple"}
+};
+const SYMPTOMS=["咳","パンティング（過呼吸）","元気がない・ぐったり","食欲不振","失神・虚脱","てんかん発作","舌・歯茎が青紫","むくみ","嘔吐","下痢・軟便","排尿の変化","運動不耐性","夜鳴き・落ち着きがない"];
+const RESP_VALUES=[14,16,18,20,22,24,26,28,30,"30+"];
+
+let current="raku";
+let currentTab="daily";
+let chartWeight=null,chartResp=null;
+
+function calcAge(b){const t=new Date(),d=new Date(b);let a=t.getFullYear()-d.getFullYear();const m=t.getMonth()-d.getMonth();if(m<0||(m===0&&t.getDate()<d.getDate()))a--;return a;}
+function K(k){return current+"_"+k;}
+function load(k){return JSON.parse(localStorage.getItem(K(k))||"[]");}
+function save(k,v){localStorage.setItem(K(k),JSON.stringify(v));}
+function today(){return new Date().toISOString().slice(0,10);}
+
+function switchDog(d){
+  current=d;
+  document.body.className="theme-"+d;
+  const dog=dogs[d];
+  document.getElementById("avatar").textContent=dog.emoji;
+  document.getElementById("dogName").textContent=dog.name+"ちゃん";
+  document.getElementById("dogSub").textContent=`${dog.breed} ・ ${calcAge(dog.birthday)}歳`+(dog.conditions.length?` ・ ${dog.conditions.join("/")}`:"");
+  document.getElementById("raku-detail").style.display=dog.mode==="detailed"?"":"none";
+  document.getElementById("suzu-simple").style.display=dog.mode==="simple"?"":"none";
+  document.getElementById("card-resp").style.display=dog.mode==="detailed"?"":"none";
+  renderAll();
+}
+
+function showTab(t){
+  currentTab=t;
+  document.querySelectorAll(".tab-page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("tab-"+t).classList.add("active");
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
+  if(t==="log")drawCharts();
+  if(t==="visit")renderVisits();
+  if(t==="med")renderMeds();
+  if(t==="vac"){renderVacs();renderPv();}
+  if(t==="daily")renderMedsToday();
+}
+
+function renderAll(){
+  document.getElementById("d-date").value=today();
+  document.getElementById("v-date").value=today();
+  document.getElementById("m-start").value=today();
+  document.getElementById("vc-date").value=today();
+  buildResp();buildSymptoms();
+  renderVisits();renderMeds();renderVacs();renderPv();renderMedsToday();renderLogs();
+  document.getElementById("pv-date").value=today();
+  updateWeightDiff();
+}
+
+function buildResp(){
+  const c=document.getElementById("d-resp");c.innerHTML="";
+  RESP_VALUES.forEach(v=>{
+    const el=document.createElement("div");el.className="chip";el.textContent=v+(v==="30+"?"":"回");
+    el.onclick=()=>{c.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));el.classList.add("on");
+      document.getElementById("d-resp-alert").innerHTML=v==="30+"?'<div class="alert danger">⚠ 念のため確認しましょう</div>':'';
+    };
+    c.appendChild(el);
+  });
+}
+function buildSymptoms(){
+  const c=document.getElementById("d-symptoms");c.innerHTML="";
+  SYMPTOMS.forEach((s,i)=>{
+    const l=document.createElement("label");l.innerHTML=`<input type="checkbox" value="${s}"> ${s}`;
+    c.appendChild(l);
+  });
+}
+
+document.addEventListener("change",e=>{
+  if(e.target.id==="d-seiz"){
+    document.getElementById("d-seiz-detail").style.display=e.target.checked?"":"none";
+    if(e.target.checked){
+      const recs=load("dailyRecords");
+      const recent=recs.filter(r=>r.seizure&&(new Date()-new Date(r.date))/(1000*3600)<24);
+      document.getElementById("d-seiz-alert").innerHTML=recent.length>=1?'<div class="alert danger">⚠ 24時間以内に発作。すぐに病院へ連絡しましょう</div>':'';
+    }
+  }
+  if(e.target.id==="d-weight"||e.target.id==="s-weight")updateWeightDiff();
+});
+
+function updateWeightDiff(){
+  const recs=load("dailyRecords");
+  const last=recs.filter(r=>r.weight).slice(-1)[0];
+  if(!last)return;
+  const id=current==="raku"?"d-weight-diff":"s-weight-diff";
+  const inp=current==="raku"?"d-weight":"s-weight";
+  const v=parseFloat(document.getElementById(inp).value);
+  if(v){const diff=(v-last.weight).toFixed(1);document.getElementById(id).textContent=`前回比：${diff>=0?"+":""}${diff}kg`;}
+  else document.getElementById(id).textContent=`前回：${last.weight}kg`;
+}
+
+document.getElementById("m-timing").addEventListener("click",e=>{
+  if(e.target.classList.contains("chip"))e.target.classList.toggle("on");
+});
+
+async function getPressure(){
+  if(!navigator.geolocation){alert("位置情報未対応");return;}
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    try{
+      const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current=surface_pressure&timezone=Asia/Tokyo`);
+      const d=await r.json();
+      const p=d.current.surface_pressure;
+      document.getElementById("d-press").value=p.toFixed(1);
+      const recs=load("dailyRecords");
+      const last=recs.filter(x=>x.pressure).slice(-1)[0];
+      if(last){const diff=(p-last.pressure).toFixed(1);
+        document.getElementById("d-press-info").innerHTML=`前日比：${diff>=0?"+":""}${diff}hPa`+(Math.abs(diff)>=2?' ⚠ 変化が大きめ':'');
+      }
+    }catch(e){alert("取得失敗");}
+  },()=>alert("位置情報取得できませんでした"));
+}
+
+function saveDaily(){
+  const dog=dogs[current];
+  const rec={date:document.getElementById("d-date").value,memo:document.getElementById("d-memo").value};
+  if(dog.mode==="detailed"){
+    const r=document.querySelector("#d-resp .chip.on");
+    if(r)rec.resp=r.textContent.replace("回","");
+    rec.weight=parseFloat(document.getElementById("d-weight").value)||null;
+    rec.pressure=parseFloat(document.getElementById("d-press").value)||null;
+    rec.symptoms=[...document.querySelectorAll("#d-symptoms input:checked")].map(x=>x.value);
+    if(document.getElementById("d-seiz").checked){
+      rec.seizure={time:document.getElementById("d-seiz-time").value,dur:document.getElementById("d-seiz-dur").value,note:document.getElementById("d-seiz-note").value};
+    }
+  }else{
+    rec.weight=parseFloat(document.getElementById("s-weight").value)||null;
+    rec.condition=document.getElementById("s-cond").value;
+  }
+  rec.medsTaken=[...document.querySelectorAll("#d-meds-today input:checked")].map(x=>x.value);
+  const arr=load("dailyRecords");arr.push(rec);save("dailyRecords",arr);
+  alert("保存しました 🐾");
+  document.getElementById("d-memo").value="";
+  document.getElementById("s-cond")&&(document.getElementById("s-cond").value="");
+  renderLogs();
+}
+
+function saveVisit(){
+  const v={date:document.getElementById("v-date").value,hosp:document.getElementById("v-hosp").value,doc:document.getElementById("v-doc").value,reason:document.getElementById("v-reason").value,test:document.getElementById("v-test").value,result:document.getElementById("v-result").value,rx:document.getElementById("v-rx").value,next:document.getElementById("v-next").value,memo:document.getElementById("v-memo").value};
+  if(!v.date||!v.hosp){alert("受診日と病院名を入力してください");return;}
+  const arr=load("visits");arr.push(v);save("visits",arr);
+  ["v-hosp","v-doc","v-reason","v-test","v-result","v-rx","v-memo"].forEach(i=>document.getElementById(i).value="");
+  renderVisits();alert("保存しました");
+}
+function renderVisits(){
+  const arr=load("visits").slice().reverse();
+  const c=document.getElementById("visit-list");
+  if(!arr.length){c.innerHTML='<div class="empty">まだ記録がありません</div>';return;}
+  c.innerHTML=arr.map((v,i)=>`<div class="list-item"><button class="del" onclick="delItem('visits',${arr.length-1-i})">削除</button><div class="date">${v.date}</div><div><b>${v.hosp}</b> ${v.doc?'/ '+v.doc:''}</div><div class="meta">${v.reason||''}</div>${v.result?`<div class="meta">所見：${v.result}</div>`:''}${v.rx?`<div class="meta">💊 ${v.rx}</div>`:''}${v.next?`<div class="meta">次回：${v.next}</div>`:''}</div>`).join("");
+}
+
+function saveMed(){
+  const t=[...document.querySelectorAll("#m-timing .chip.on")].map(x=>x.dataset.t);
+  const m={name:document.getElementById("m-name").value,dose:document.getElementById("m-dose").value,timing:t,start:document.getElementById("m-start").value,from:document.getElementById("m-from").value};
+  if(!m.name){alert("薬名を入力してください");return;}
+  const arr=load("medications");arr.push(m);save("medications",arr);
+  ["m-name","m-dose","m-from"].forEach(i=>document.getElementById(i).value="");
+  document.querySelectorAll("#m-timing .chip").forEach(x=>x.classList.remove("on"));
+  renderMeds();renderMedsToday();
+}
+function renderMeds(){
+  const arr=load("medications");
+  const c=document.getElementById("med-list");
+  if(!arr.length){c.innerHTML='<div class="empty">服薬登録なし</div>';return;}
+  c.innerHTML=arr.map((m,i)=>`<div class="list-item"><button class="del" onclick="delItem('medications',${i})">削除</button><div class="date">${m.name}</div><div class="meta">${m.dose||''} ／ ${(m.timing||[]).join('・')||'—'}</div><div class="meta">${m.from||''}</div></div>`).join("");
+}
+function renderMedsToday(){
+  const arr=load("medications");
+  const c=document.getElementById("d-meds-today");
+  if(!arr.length){c.innerHTML='<div class="empty" style="padding:8px">登録された薬はありません</div>';return;}
+  c.innerHTML=arr.map(m=>`<label><input type="checkbox" value="${m.name}"> ${m.name} ${m.dose||''} <span style="color:#9b8580;font-size:11px">${(m.timing||[]).join('・')}</span></label>`).join("");
+}
+
+function saveVac(){
+  const v={name:document.getElementById("vc-name").value,date:document.getElementById("vc-date").value,next:document.getElementById("vc-next").value,hosp:document.getElementById("vc-hosp").value,memo:document.getElementById("vc-memo").value};
+  if(!v.name){alert("名称を入力してください");return;}
+  if(!v.next&&v.date){const d=new Date(v.date);d.setFullYear(d.getFullYear()+1);v.next=d.toISOString().slice(0,10);}
+  const arr=load("vaccines");arr.push(v);save("vaccines",arr);
+  ["vc-name","vc-hosp","vc-memo"].forEach(i=>document.getElementById(i).value="");
+  renderVacs();
+}
+function renderVacs(){
+  const arr=load("vaccines");
+  const c=document.getElementById("vac-list");
+  if(!arr.length){c.innerHTML='<div class="empty">登録なし</div>';return;}
+  const now=new Date();
+  c.innerHTML=arr.map((v,i)=>{
+    let alert="";
+    if(v.next){const days=Math.ceil((new Date(v.next)-now)/(1000*3600*24));
+      if(days<0)alert=`<div class="alert warn">期限を過ぎています</div>`;
+      else if(days<=30)alert=`<div class="alert warn">あと${days}日 ⚠ そろそろ予約しましょう</div>`;
+      else alert=`<div class="meta">次回まであと${days}日</div>`;
+    }
+    return `<div class="list-item"><button class="del" onclick="delItem('vaccines',${i})">削除</button><div class="date">${v.name}</div><div class="meta">実施：${v.date||'—'} ／ 次回：${v.next||'—'}</div><div class="meta">${v.hosp||''}</div>${alert}</div>`;
+  }).join("");
+}
+
+function savePv(){
+  const p={type:document.getElementById("pv-type").value,name:document.getElementById("pv-name").value,date:document.getElementById("pv-date").value,next:document.getElementById("pv-next").value,memo:document.getElementById("pv-memo").value};
+  if(!p.date){alert("投与日を入力してください");return;}
+  if(!p.next&&p.type==="ノミダニ"){const d=new Date(p.date);d.setDate(d.getDate()+40);p.next=d.toISOString().slice(0,10);}
+  const arr=load("preventives");arr.push(p);save("preventives",arr);
+  ["pv-name","pv-next","pv-memo"].forEach(i=>document.getElementById(i).value="");
+  renderPv();alert("記録しました 🪱");
+}
+function renderPv(){
+  const arr=load("preventives").slice().reverse();
+  const c=document.getElementById("pv-list");
+  if(!c)return;
+  if(!arr.length){c.innerHTML='<div class="empty">記録なし</div>';return;}
+  const now=new Date();
+  // 種類ごとの最新を上に
+  const latest={};
+  arr.forEach(p=>{if(!latest[p.type])latest[p.type]=p;});
+  let head="";
+  Object.values(latest).forEach(p=>{
+    if(!p.next)return;
+    const days=Math.ceil((new Date(p.next)-now)/(1000*3600*24));
+    let cls="ok",msg=`次回まであと${days}日`;
+    if(days<0){cls="danger";msg=`⚠ ${-days}日 過ぎています`;}
+    else if(days<=7){cls="danger";msg=`⚠ あと${days}日！忘れずに`;}
+    else if(days<=14){cls="warn";msg=`あと${days}日 そろそろ準備`;}
+    head+=`<div class="alert ${cls}"><b>${p.type}</b>：${msg}（次回 ${p.next}）</div>`;
+  });
+  c.innerHTML=head+arr.map((p,i)=>`<div class="list-item"><button class="del" onclick="delItem('preventives',${arr.length-1-i})">削除</button><div class="date">${p.type} ／ ${p.name||''}</div><div class="meta">投与：${p.date} ／ 次回：${p.next||'—'}</div>${p.memo?`<div class="meta">📝 ${p.memo}</div>`:''}</div>`).join("");
+}
+function delItem(k,i){if(!confirm("削除しますか？"))return;const a=load(k);a.splice(i,1);save(k,a);renderVisits();renderMeds();renderVacs();renderPv();renderLogs();renderMedsToday();}
+
+function renderLogs(){
+  const arr=load("dailyRecords").slice().reverse();
+  const c=document.getElementById("log-list");
+  if(!arr.length){c.innerHTML='<div class="empty">まだ記録がありません</div>';return;}
+  c.innerHTML=arr.map((r,i)=>`<div class="list-item"><button class="del" onclick="delItem('dailyRecords',${arr.length-1-i})">削除</button><div class="date">${r.date}</div>${r.weight?`<div class="meta">体重 ${r.weight}kg</div>`:''}${r.resp?`<div class="meta">呼吸 ${r.resp}回</div>`:''}${r.pressure?`<div class="meta">気圧 ${r.pressure}hPa</div>`:''}${r.symptoms&&r.symptoms.length?`<div class="meta">症状：${r.symptoms.join('・')}</div>`:''}${r.seizure?`<div class="alert danger">⚡ 発作：${r.seizure.time||''} ${r.seizure.dur||''}秒</div>`:''}${r.condition?`<div class="meta">${r.condition}</div>`:''}${r.memo?`<div class="meta">📝 ${r.memo}</div>`:''}</div>`).join("");
+}
+
+function drawCharts(){
+  const arr=load("dailyRecords");
+  const wd=arr.filter(r=>r.weight);
+  const ctx=document.getElementById("chart-weight").getContext("2d");
+  if(chartWeight)chartWeight.destroy();
+  chartWeight=new Chart(ctx,{type:"line",data:{labels:wd.map(r=>r.date),datasets:[{label:"体重(kg)",data:wd.map(r=>r.weight),borderColor:current==="raku"?"#C9848A":"#9E8FC4",backgroundColor:"rgba(201,132,138,.1)",tension:.3}]},options:{plugins:{legend:{display:false}}}});
+  if(dogs[current].mode==="detailed"){
+    const rd=arr.filter(r=>r.resp&&r.resp!=="30+");
+    const ctx2=document.getElementById("chart-resp").getContext("2d");
+    if(chartResp)chartResp.destroy();
+    chartResp=new Chart(ctx2,{type:"line",data:{labels:rd.map(r=>r.date),datasets:[{label:"呼吸数",data:rd.map(r=>parseInt(r.resp)),borderColor:"#C9848A",tension:.3}]},options:{plugins:{legend:{display:false}}}});
+  }
+}
+
+function exportCSV(){
+  const arr=load("dailyRecords");
+  if(!arr.length){alert("データなし");return;}
+  const head=["date","weight","resp","pressure","symptoms","seizure","memo"];
+  const rows=arr.map(r=>[r.date,r.weight||"",r.resp||"",r.pressure||"",(r.symptoms||[]).join("・"),r.seizure?"あり":"",(r.memo||"").replace(/[\r\n,]/g," ")]);
+  const csv="\uFEFF"+[head.join(","),...rows.map(r=>r.join(","))].join("\n");
+  const blob=new Blob([csv],{type:"text/csv"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`${current}_records.csv`;a.click();
+}
+
+switchDog("raku");
+</script>
+</body>
+</html>
