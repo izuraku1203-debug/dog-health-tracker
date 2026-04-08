@@ -115,7 +115,10 @@
           <input type="number" step="0.1" id="d-press" placeholder="hPa">
           <button class="btn btn-sub" style="margin:0" onclick="getPressure()">📍取得</button>
         </div>
-        <div class="mini" id="d-press-info">前日比：—</div>
+        <div class="chips" id="d-press-chips" style="margin-top:8px"></div>
+        <div class="mini" id="d-press-info">タップで入力もできます</div>
+        <canvas id="d-press-mini" height="80" style="margin-top:10px"></canvas>
+        <div class="mini" id="d-press-trend"></div>
       </div>
 
       <div class="card">
@@ -248,8 +251,11 @@
       <h2>🌡 気圧の推移（楽ちゃん）</h2>
       <canvas id="chart-press" height="160"></canvas>
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:10px">
-      <button class="btn btn-sub" style="margin:0" onclick="exportCSV()">📤 CSV出力</button>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <button class="btn btn-sub" style="margin:0;flex:1" onclick="exportCSV()">📤 CSV</button>
+      <button class="btn btn-sub" style="margin:0;flex:1" onclick="backupAll()">💾 バックアップ</button>
+      <button class="btn btn-sub" style="margin:0;flex:1" onclick="document.getElementById('restore-file').click()">📥 復元</button>
+      <input type="file" id="restore-file" accept=".json" style="display:none" onchange="restoreAll(event)">
     </div>
     <h2 style="font-size:14px;margin:18px 4px 8px">日々の記録</h2>
     <div id="log-list"></div>
@@ -313,7 +319,7 @@ function renderAll(){
   document.getElementById("v-date").value=today();
   document.getElementById("m-start").value=today();
   document.getElementById("vc-date").value=today();
-  buildResp();buildSymptoms();
+  buildResp();buildSymptoms();buildPressChips();loadPressWeek();
   renderVisits();renderMeds();renderVacs();renderPv();renderMedsToday();renderLogs();
   document.getElementById("pv-date").value=today();
   updateWeightDiff();
@@ -364,6 +370,41 @@ document.getElementById("m-timing").addEventListener("click",e=>{
   if(e.target.classList.contains("chip"))e.target.classList.toggle("on");
 });
 
+function buildPressChips(){
+  const c=document.getElementById("d-press-chips");if(!c)return;c.innerHTML="";
+  [995,1000,1005,1008,1010,1013,1015,1018,1020,1025].forEach(v=>{
+    const el=document.createElement("div");el.className="chip";el.textContent=v;
+    el.onclick=()=>{document.getElementById("d-press").value=v;c.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));el.classList.add("on");};
+    c.appendChild(el);
+  });
+}
+
+let chartPressMini=null;
+async function loadPressWeek(lat,lon){
+  if(current!=="raku")return;
+  // フォールバック座標：東京
+  lat=lat||35.68;lon=lon||139.76;
+  try{
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=surface_pressure&past_days=7&forecast_days=1&timezone=Asia/Tokyo`;
+    const r=await fetch(url);const d=await r.json();
+    const times=d.hourly.time,vals=d.hourly.surface_pressure;
+    // 1日ごとに平均
+    const byDay={};
+    times.forEach((t,i)=>{const day=t.slice(0,10);(byDay[day]=byDay[day]||[]).push(vals[i]);});
+    const days=Object.keys(byDay).slice(-8);
+    const avg=days.map(k=>byDay[k].reduce((s,v)=>s+v,0)/byDay[k].length);
+    const ctx=document.getElementById("d-press-mini").getContext("2d");
+    if(chartPressMini)chartPressMini.destroy();
+    chartPressMini=new Chart(ctx,{type:"line",data:{labels:days.map(d=>d.slice(5)),datasets:[{label:"気圧",data:avg,borderColor:"#7BA7C9",backgroundColor:"#7BA7C922",tension:.4,fill:true,pointRadius:2}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9}}},y:{ticks:{font:{size:9}}}}}});
+    const first=avg[0],last=avg[avg.length-1],diff=(last-first).toFixed(1);
+    let trend="→ 安定";if(diff>2)trend="↗ 上昇傾向";else if(diff<-2)trend="↘ 下降傾向（体調注意）";
+    document.getElementById("d-press-trend").innerHTML=`過去1週間：${trend}（${diff>=0?"+":""}${diff}hPa）／ 今 ${last.toFixed(1)}hPa`;
+    if(!document.getElementById("d-press").value)document.getElementById("d-press").value=last.toFixed(1);
+  }catch(e){
+    document.getElementById("d-press-trend").innerHTML='<span style="color:#B33A3A">気圧データ取得失敗。手動入力してください</span>';
+  }
+}
+
 async function getPressure(){
   const info=document.getElementById("d-press-info");
   if(location.protocol!=="https:"&&location.hostname!=="localhost"){
@@ -384,6 +425,7 @@ async function getPressure(){
         msg+=` ／ 前回比：${diff>=0?"+":""}${diff}hPa`+(Math.abs(diff)>=2?' ⚠':'');
       }
       info.innerHTML=msg;
+      loadPressWeek(pos.coords.latitude,pos.coords.longitude);
     }catch(e){info.innerHTML='<span style="color:#B33A3A">通信エラー。手動入力してください</span>';}
   },err=>{
     const m={1:"位置情報が拒否されています。設定→Safari→位置情報を許可",2:"現在地が取得できませんでした",3:"タイムアウト"};
@@ -551,6 +593,25 @@ function exportCSV(){
   const csv="\uFEFF"+[head.join(","),...rows.map(r=>r.join(","))].join("\n");
   const blob=new Blob([csv],{type:"text/csv"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`${current}_records.csv`;a.click();
+}
+
+function backupAll(){
+  const all={};
+  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);all[k]=localStorage.getItem(k);}
+  const blob=new Blob([JSON.stringify(all,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download=`rakurin_backup_${today()}.json`;a.click();
+}
+function restoreAll(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{const d=JSON.parse(r.result);
+      if(!confirm("現在のデータに上書きします。続けますか？"))return;
+      Object.keys(d).forEach(k=>localStorage.setItem(k,d[k]));
+      alert("復元しました");location.reload();
+    }catch(err){alert("ファイルが読めませんでした");}
+  };r.readAsText(f);
 }
 
 switchDog("raku");
