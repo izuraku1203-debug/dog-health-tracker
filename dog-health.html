@@ -58,7 +58,7 @@
   .list-item .date{font-weight:700;color:#C9848A;margin-bottom:4px}
   body.theme-suzu .list-item .date{color:#9E8FC4}
   .list-item .meta{color:#7a6663;font-size:12px}
-  .del{float:right;color:#B33A3A;font-size:12px;background:transparent;border:0;cursor:pointer}
+  .del{float:right;color:#fff;background:#D9646A;border:0;cursor:pointer;font-size:12px;padding:6px 12px;border-radius:8px;font-weight:700;min-height:32px}
   .empty{text-align:center;color:#9b8580;font-size:13px;padding:24px 10px}
   .timeline{display:flex;gap:8px;margin-top:8px}
   .timeline div{flex:1;background:#F8F1EF;border-radius:10px;padding:10px;text-align:center;font-size:12px}
@@ -237,10 +237,16 @@
     <div class="card">
       <h2>📊 体重の推移</h2>
       <canvas id="chart-weight" height="180"></canvas>
+      <div id="weight-summary" class="mini" style="margin-top:8px"></div>
     </div>
     <div class="card" id="card-resp" style="display:none">
       <h2>💨 呼吸数の推移（楽ちゃん）</h2>
       <canvas id="chart-resp" height="180"></canvas>
+      <div id="resp-summary" class="mini" style="margin-top:8px"></div>
+    </div>
+    <div class="card" id="card-press" style="display:none">
+      <h2>🌡 気圧の推移（楽ちゃん）</h2>
+      <canvas id="chart-press" height="160"></canvas>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:10px">
       <button class="btn btn-sub" style="margin:0" onclick="exportCSV()">📤 CSV出力</button>
@@ -261,7 +267,7 @@
 <script>
 const dogs = {
   raku:{name:"楽",kana:"らく",emoji:"🐾",breed:"ボストンテリア",birthday:"2016-08-08",conditions:["僧帽弁閉鎖不全症","てんかん"],mode:"detailed"},
-  suzu:{name:"鈴",kana:"すず",emoji:"🐩",breed:"ブラックプードル",birthday:"2018-06-23",conditions:[],mode:"simple"}
+  suzu:{name:"鈴",kana:"りん",emoji:"🐩",breed:"ブラックプードル",birthday:"2018-06-23",conditions:[],mode:"simple"}
 };
 const SYMPTOMS=["咳","パンティング（過呼吸）","元気がない・ぐったり","食欲不振","失神・虚脱","てんかん発作","舌・歯茎が青紫","むくみ","嘔吐","下痢・軟便","排尿の変化","運動不耐性","夜鳴き・落ち着きがない"];
 const RESP_VALUES=[14,16,18,20,22,24,26,28,30,"30+"];
@@ -281,11 +287,12 @@ function switchDog(d){
   document.body.className="theme-"+d;
   const dog=dogs[d];
   document.getElementById("avatar").textContent=dog.emoji;
-  document.getElementById("dogName").textContent=dog.name+"ちゃん";
+  document.getElementById("dogName").textContent=dog.name+"ちゃん（"+dog.kana+"）";
   document.getElementById("dogSub").textContent=`${dog.breed} ・ ${calcAge(dog.birthday)}歳`+(dog.conditions.length?` ・ ${dog.conditions.join("/")}`:"");
   document.getElementById("raku-detail").style.display=dog.mode==="detailed"?"":"none";
   document.getElementById("suzu-simple").style.display=dog.mode==="simple"?"":"none";
   document.getElementById("card-resp").style.display=dog.mode==="detailed"?"":"none";
+  document.getElementById("card-press").style.display=dog.mode==="detailed"?"":"none";
   renderAll();
 }
 
@@ -294,7 +301,7 @@ function showTab(t){
   document.querySelectorAll(".tab-page").forEach(p=>p.classList.remove("active"));
   document.getElementById("tab-"+t).classList.add("active");
   document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
-  if(t==="log")drawCharts();
+  if(t==="log"){drawCharts();renderLogs();}
   if(t==="visit")renderVisits();
   if(t==="med")renderMeds();
   if(t==="vac"){renderVacs();renderPv();}
@@ -358,7 +365,12 @@ document.getElementById("m-timing").addEventListener("click",e=>{
 });
 
 async function getPressure(){
-  if(!navigator.geolocation){alert("位置情報未対応");return;}
+  const info=document.getElementById("d-press-info");
+  if(location.protocol!=="https:"&&location.hostname!=="localhost"){
+    info.innerHTML='<span style="color:#B33A3A">HTTPSでないと位置情報が使えません。手動で入力してください</span>';return;
+  }
+  if(!navigator.geolocation){info.innerHTML='<span style="color:#B33A3A">この端末では位置情報が使えません</span>';return;}
+  info.textContent="📍取得中...";
   navigator.geolocation.getCurrentPosition(async pos=>{
     try{
       const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current=surface_pressure&timezone=Asia/Tokyo`);
@@ -367,11 +379,16 @@ async function getPressure(){
       document.getElementById("d-press").value=p.toFixed(1);
       const recs=load("dailyRecords");
       const last=recs.filter(x=>x.pressure).slice(-1)[0];
+      let msg=`✅ 取得しました（${p.toFixed(1)}hPa）`;
       if(last){const diff=(p-last.pressure).toFixed(1);
-        document.getElementById("d-press-info").innerHTML=`前日比：${diff>=0?"+":""}${diff}hPa`+(Math.abs(diff)>=2?' ⚠ 変化が大きめ':'');
+        msg+=` ／ 前回比：${diff>=0?"+":""}${diff}hPa`+(Math.abs(diff)>=2?' ⚠':'');
       }
-    }catch(e){alert("取得失敗");}
-  },()=>alert("位置情報取得できませんでした"));
+      info.innerHTML=msg;
+    }catch(e){info.innerHTML='<span style="color:#B33A3A">通信エラー。手動入力してください</span>';}
+  },err=>{
+    const m={1:"位置情報が拒否されています。設定→Safari→位置情報を許可",2:"現在地が取得できませんでした",3:"タイムアウト"};
+    info.innerHTML=`<span style="color:#B33A3A">${m[err.code]||"取得失敗"}。手動入力してください</span>`;
+  },{timeout:10000});
 }
 
 function saveDaily(){
@@ -496,17 +513,33 @@ function renderLogs(){
   c.innerHTML=arr.map((r,i)=>`<div class="list-item"><button class="del" onclick="delItem('dailyRecords',${arr.length-1-i})">削除</button><div class="date">${r.date}</div>${r.weight?`<div class="meta">体重 ${r.weight}kg</div>`:''}${r.resp?`<div class="meta">呼吸 ${r.resp}回</div>`:''}${r.pressure?`<div class="meta">気圧 ${r.pressure}hPa</div>`:''}${r.symptoms&&r.symptoms.length?`<div class="meta">症状：${r.symptoms.join('・')}</div>`:''}${r.seizure?`<div class="alert danger">⚡ 発作：${r.seizure.time||''} ${r.seizure.dur||''}秒</div>`:''}${r.condition?`<div class="meta">${r.condition}</div>`:''}${r.memo?`<div class="meta">📝 ${r.memo}</div>`:''}</div>`).join("");
 }
 
+let chartPress=null;
 function drawCharts(){
-  const arr=load("dailyRecords");
+  const arr=load("dailyRecords").slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const color=current==="raku"?"#C9848A":"#9E8FC4";
   const wd=arr.filter(r=>r.weight);
   const ctx=document.getElementById("chart-weight").getContext("2d");
   if(chartWeight)chartWeight.destroy();
-  chartWeight=new Chart(ctx,{type:"line",data:{labels:wd.map(r=>r.date),datasets:[{label:"体重(kg)",data:wd.map(r=>r.weight),borderColor:current==="raku"?"#C9848A":"#9E8FC4",backgroundColor:"rgba(201,132,138,.1)",tension:.3}]},options:{plugins:{legend:{display:false}}}});
+  chartWeight=new Chart(ctx,{type:"line",data:{labels:wd.map(r=>r.date.slice(5)),datasets:[{label:"体重(kg)",data:wd.map(r=>r.weight),borderColor:color,backgroundColor:color+"22",tension:.3,fill:true}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:false}}}});
+  const ws=document.getElementById("weight-summary");
+  if(wd.length>=2){const f=wd[0],l=wd[wd.length-1],d=(l.weight-f.weight).toFixed(1);
+    ws.innerHTML=`記録${wd.length}件 ／ 最初 ${f.weight}kg → 最新 ${l.weight}kg（${d>=0?"+":""}${d}kg）`;
+  }else if(wd.length===1)ws.textContent=`最新 ${wd[0].weight}kg`;else ws.textContent="記録なし";
+
   if(dogs[current].mode==="detailed"){
     const rd=arr.filter(r=>r.resp&&r.resp!=="30+");
     const ctx2=document.getElementById("chart-resp").getContext("2d");
     if(chartResp)chartResp.destroy();
-    chartResp=new Chart(ctx2,{type:"line",data:{labels:rd.map(r=>r.date),datasets:[{label:"呼吸数",data:rd.map(r=>parseInt(r.resp)),borderColor:"#C9848A",tension:.3}]},options:{plugins:{legend:{display:false}}}});
+    chartResp=new Chart(ctx2,{type:"line",data:{labels:rd.map(r=>r.date.slice(5)),datasets:[{label:"呼吸数",data:rd.map(r=>parseInt(r.resp)),borderColor:"#C9848A",backgroundColor:"#C9848A22",tension:.3,fill:true}]},options:{plugins:{legend:{display:false}}}});
+    const rs=document.getElementById("resp-summary");
+    if(rd.length){const avg=(rd.reduce((s,r)=>s+parseInt(r.resp),0)/rd.length).toFixed(1);
+      rs.textContent=`平均 ${avg}回/分（${rd.length}件）`;
+    }else rs.textContent="記録なし";
+
+    const pd=arr.filter(r=>r.pressure);
+    const ctx3=document.getElementById("chart-press").getContext("2d");
+    if(chartPress)chartPress.destroy();
+    chartPress=new Chart(ctx3,{type:"line",data:{labels:pd.map(r=>r.date.slice(5)),datasets:[{label:"気圧",data:pd.map(r=>r.pressure),borderColor:"#7BA7C9",backgroundColor:"#7BA7C922",tension:.3,fill:true}]},options:{plugins:{legend:{display:false}}}});
   }
 }
 
